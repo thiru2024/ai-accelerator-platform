@@ -1,0 +1,12 @@
+name: Hello World Test
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prove the pipeline works
+        run: echo "Platform repo is alive"
