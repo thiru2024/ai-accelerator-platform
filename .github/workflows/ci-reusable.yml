@@ -52,6 +52,15 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Deploy infrastructure with Bicep
+        run: |
+          az deployment group create \
+            --resource-group rg-platform-shared \
+            --template-file infrastructure/main.bicep \
+            --parameters \
+              appName=${{ steps.platform.outputs.app_name }} \
+              image=crdemoaiapp12345.azurecr.io/${{ steps.platform.outputs.app_name }}:${{ github.sha }}
+
       - name: Deploy Container App
         run: |
           az containerapp update \
