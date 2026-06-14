@@ -21,6 +21,7 @@ jobs:
           repository: thiru2024/ai-accelerator-platform
           ref: main
           path: platform
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Debug files
         run: |
