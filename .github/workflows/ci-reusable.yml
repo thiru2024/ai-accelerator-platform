@@ -10,6 +10,9 @@ jobs:
     steps:
       - name: Checkout App Repo
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
