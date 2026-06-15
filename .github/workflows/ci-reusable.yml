@@ -8,26 +8,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout demo app repo
+      - name: Checkout app repo
         uses: actions/checkout@v4
         with:
           repository: thiru2024/demo-ai-app
           ref: main
           path: app
-
-      - name: Checkout platform repo
-        uses: actions/checkout@v4
-        with:
-          repository: thiru2024/ai-accelerator-platform
-          ref: main
-          path: platform
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Debug files
-        run: |
-          ls -la
-          ls -la app
-          ls -la platform/infrastructure
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -45,8 +31,13 @@ jobs:
         id: platform_config
         working-directory: app
         run: |
-          APP_NAME=$(python -c "import yaml; print(yaml.safe_load(open('platform.yml'))['app_name'])")
+          APP_NAME=$(python -c "import yaml; c=yaml.safe_load(open('platform.yml')); print(c['app_name'])")
+          REGISTRY_NAME=$(python -c "import yaml; c=yaml.safe_load(open('platform.yml')); print(c['registry']['name'])")
+          RESOURCE_GROUP=$(python -c "import yaml; c=yaml.safe_load(open('platform.yml')); print(c['azure']['resource_group'])")
+
           echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
+          echo "registry_name=$REGISTRY_NAME" >> $GITHUB_OUTPUT
+          echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
 
       - name: Validate platform.yml
         working-directory: app
@@ -54,39 +45,30 @@ jobs:
 
       - name: Docker Login
         run: |
-          echo "${{ secrets.ACR_PASSWORD }}" | docker login crdemoaiapp12345.azurecr.io \
-            --username crdemoaiapp12345 \
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ steps.platform_config.outputs.registry_name }}.azurecr.io \
+            --username ${{ steps.platform_config.outputs.registry_name }} \
             --password-stdin
 
       - name: Docker Build
         working-directory: app
         run: |
           docker build \
-            -t crdemoaiapp12345.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }} \
+            -t ${{ steps.platform_config.outputs.registry_name }}.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }} \
             .
 
       - name: Docker Push
         run: |
           docker push \
-            crdemoaiapp12345.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }}
+            ${{ steps.platform_config.outputs.registry_name }}.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }}
 
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    #   - name: Deploy infrastructure with Bicep
-    #     run: |
-    #       az deployment group create \
-    #         --resource-group rg-platform-shared \
-    #         --template-file platform/infrastructure/main.bicep \
-    #         --parameters \
-    #           appName=${{ steps.platform_config.outputs.app_name }} \
-    #           image=crdemoaiapp12345.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }}
-
       - name: Deploy Container App
         run: |
           az containerapp update \
             --name ${{ steps.platform_config.outputs.app_name }} \
-            --resource-group rg-platform-shared \
-            --image crdemoaiapp12345.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }}
+            --resource-group ${{ steps.platform_config.outputs.resource_group }} \
+            --image ${{ steps.platform_config.outputs.registry_name }}.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }}
