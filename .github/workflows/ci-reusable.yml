@@ -68,14 +68,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
         
-      - name: Deploy generated Bicep
-        run: |
-          az deployment group create \
-            --resource-group ${{ steps.platform_config.outputs.resource_group }} \
-            --template-file app/generated/main.bicep \
-            --parameters \
-              appName=${{ steps.platform_config.outputs.app_name }} \
-              image=${{ steps.platform_config.outputs.registry_name }}.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }}
+    #   - name: Deploy generated Bicep
+    #     run: |
+    #       az deployment group create \
+    #         --resource-group ${{ steps.platform_config.outputs.resource_group }} \
+    #         --template-file app/generated/main.bicep \
+    #         --parameters \
+    #           appName=${{ steps.platform_config.outputs.app_name }} \
+    #           image=${{ steps.platform_config.outputs.registry_name }}.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }}
 
       - name: Deploy Container App
         run: |
