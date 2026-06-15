@@ -8,11 +8,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout app repo
+      - name: Checkout calling app repo
         uses: actions/checkout@v4
         with:
-          repository: thiru2024/demo-ai-app
-          ref: main
           path: app
 
       - name: Set up Python
