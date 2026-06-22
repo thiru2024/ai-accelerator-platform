@@ -38,7 +38,7 @@ jobs:
           echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
 
       - name: Validate platform.yml
-        run: python platform/vlidate_platform.py
+        run: python platform/validate_platform.py
           
       - name: Generate Bicep from platform.yml
         run: python platform/generate_bicep.py
