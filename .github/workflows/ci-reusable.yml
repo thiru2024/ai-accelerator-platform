@@ -38,12 +38,10 @@ jobs:
           echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
 
       - name: Validate platform.yml
-        working-directory: app
-        run: python scripts/validate_platform.py
+        run: python platform/vlidate_platform.py
           
       - name: Generate Bicep from platform.yml
-        working-directory: app
-        run: python scripts/generate_bicep.py
+        run: python platform/generate_bicep.py
 
       - name: Docker Login
         run: |
