@@ -8,10 +8,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the app repo that called this workflow
       - name: Checkout calling app repo
         uses: actions/checkout@v4
         with:
           path: app
+
+      # Checkout the platform repo itself
+      - name: Checkout platform repo
+        uses: actions/checkout@v4
+        with:
+          repository: thiru2024/ai-accelerator-platform
+          ref: main
+          path: platform
+
+      # Debug (can remove later)
+      - name: Debug checkout
+        run: |
+          echo "ROOT"
+          ls -la
+
+          echo ""
+          echo "APP"
+          ls -la app
+
+          echo ""
+          echo "PLATFORM"
+          ls -la platform
+
+          echo ""
+          echo "PLATFORM SCRIPTS"
+          ls -la platform/scripts
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -38,14 +65,17 @@ jobs:
           echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
 
       - name: Validate platform.yml
-        run: python platform/scripts/validate_platform.py
-          
+        run: |
+          python platform/scripts/validate_platform.py
+
       - name: Generate Bicep from platform.yml
-        run: python platform/scripts/generate_bicep.py
+        run: |
+          python platform/scripts/generate_bicep.py
 
       - name: Docker Login
         run: |
-          echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ steps.platform_config.outputs.registry_name }}.azurecr.io \
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login \
+            ${{ steps.platform_config.outputs.registry_name }}.azurecr.io \
             --username ${{ steps.platform_config.outputs.registry_name }} \
             --password-stdin
 
@@ -65,7 +95,6 @@ jobs:
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-        
 
       - name: Deploy Container App
         run: |
