@@ -56,13 +56,31 @@ jobs:
         id: platform_config
         working-directory: app
         run: |
-          APP_NAME=$(python -c "import yaml; c=yaml.safe_load(open('platform.yml')); print(c['app_name'])")
-          REGISTRY_NAME=$(python -c "import yaml; c=yaml.safe_load(open('platform.yml')); print(c['registry']['name'])")
-          RESOURCE_GROUP=$(python -c "import yaml; c=yaml.safe_load(open('platform.yml')); print(c['environments']['dev']['resource_group'])")
+          ENVIRONMENT=dev
 
-          echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
-          echo "registry_name=$REGISTRY_NAME" >> $GITHUB_OUTPUT
-          echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF_NAME}" == "release" ]]; then
+            ENVIRONMENT=staging
+          fi
+
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            ENVIRONMENT=prod
+          fi
+
+          APP_NAME=$(python -c "import yaml; c=yaml.safe_load(open('platform.yml')); print(c['app_name'])")
+
+          REGISTRY_NAME=$(python -c "import yaml; c=yaml.safe_load(open('platform.yml')); print(c['registry']['name'])")
+
+          RESOURCE_GROUP=$(python -c "
+            import yaml
+            c=yaml.safe_load(open('platform.yml'))
+            print(c['environments']['$ENVIRONMENT']['resource_group'])
+            ")
+
+                    echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+                    echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
+                    echo "registry_name=$REGISTRY_NAME" >> $GITHUB_OUTPUT
+                    echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
+
 
       - name: Validate platform.yml
         run: |

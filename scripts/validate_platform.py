@@ -11,7 +11,6 @@ REQUIRED_FIELDS = [
     "stack",
     "services",
     "registry",
-    "azure",
     "environments",
 ]
 
@@ -41,8 +40,17 @@ def main():
     if "registry" in config and "name" not in config["registry"]:
         errors.append("Missing registry.name")
 
-    if "azure" in config and "resource_group" not in config["azure"]:
-        errors.append("Missing azure.resource_group")
+    required_envs = ["dev", "staging", "prod"]
+
+    for env in required_envs:
+        if env not in config["environments"]:
+            errors.append(f"Missing environment: {env}")
+
+    for env in required_envs:
+        if "resource_group" not in config["environments"][env]:
+            errors.append(
+                f"Missing resource_group in environments.{env}"
+            )
 
     if not config.get("environments"):
         errors.append("At least one environment is required")
