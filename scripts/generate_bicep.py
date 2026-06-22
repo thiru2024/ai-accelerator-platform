@@ -1,16 +1,19 @@
 import os
 import yaml
+from pathlib import Path
 
 def main():
-    with open("platform.yml", "r") as f:
+    config_path = Path("app/platform.yml")
+
+    with config_path.open("r") as f:
         config = yaml.safe_load(f)
 
-    app_name = config["app_name"]
     services = config["services"]
 
-    os.makedirs("generated", exist_ok=True)
+    os.makedirs("app/generated", exist_ok=True)
 
-    bicep = """
+    if "container_app" in services:
+        bicep = """
 param appName string
 param image string
 param location string = resourceGroup().location
@@ -53,18 +56,17 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
 
 output appUrl string = containerApp.properties.configuration.ingress.fqdn
 """
-
-    if "container_app" not in services:
+    else:
         bicep = """
 param appName string
 param image string
 param location string = resourceGroup().location
 """
 
-    with open("generated/main.bicep", "w") as f:
+    with open("app/generated/main.bicep", "w") as f:
         f.write(bicep.strip())
 
-    print("Generated generated/main.bicep")
+    print("Generated app/generated/main.bicep")
 
 if __name__ == "__main__":
     main()
