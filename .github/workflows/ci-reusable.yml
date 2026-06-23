@@ -111,8 +111,11 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy Container App
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           az containerapp update \
             --name ${{ steps.platform_config.outputs.app_name }} \
             --resource-group ${{ steps.platform_config.outputs.resource_group }} \
-            --image ${{ steps.platform_config.outputs.registry_name }}.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }}
+            --image ${{ steps.platform_config.outputs.registry_name }}.azurecr.io/${{ steps.platform_config.outputs.app_name }}:${{ github.sha }} \
+            --set-env-vars OPENAI_API_KEY="$OPENAI_API_KEY"
